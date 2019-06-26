@@ -18,6 +18,8 @@ class CellImages(torch.utils.data.Dataset):
         """
         self.transforms = transforms
         self.image_names_raw = self._load_data_names(path)
+        assert "Uninfected" in path or "Parasitized" in path, "Expected path of format ../Uninfected or ../Parasitized, but got {}".format(path)
+        assert len(self.image_names_raw) != 0, "Found no .png in {}".format(path)
 
     def _load_data_names(self, path):
         """
@@ -48,22 +50,21 @@ class Flatten(object):
         image_shape = image_tensor.size()
         
         assert len(image_shape) == 3, "Expected 3D tensor but got {}".format(image_shape)
-        return image_tensor.view((image_shape[0], image_shape[1], -1))
+        return image_tensor.view((image_shape[0], -1))
 
-class Autoencoder(nn.Module):
-    """ Our model.
+
+def main():
     """
-    def __init__(self):
-        pass
-  
-    def forward(self, x):
-        pass
+    Test example
+    """
 
-transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize((100,100)),
-    torchvision.transforms.ToTensor(),
-    Flatten()    
-])
-civs = CellImages("../project/cell_images/Uninfected", transforms=transforms)
-dataloader = torch.utils.data.DataLoader(civs, batch_size=16)
-
+    transforms = torchvision.transforms.Compose([
+        torchvision.transforms.Resize((100,100)),
+        torchvision.transforms.ToTensor(),
+        Flatten()    
+    ])
+    civs = CellImages("../project/cell_images/Uninfected", transforms=transforms)
+    dataloader = torch.utils.data.DataLoader(civs, batch_size=16)
+    
+if __name__ == "__main__":
+    main()
