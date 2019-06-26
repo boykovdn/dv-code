@@ -4,13 +4,19 @@ import torchvision
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import numpy as np
+import dataloading
+import time
+import datetime
 
-class Autoencoder_module(nn.Module):
+class FCAutoencoder(nn.Module):
     """
-    Attempt at an autoencoder
+    Fully connected autoencoder
     """
     
-    def __init__(self, size_input=28*28):
+    def __init__(self, size_input):
+        """
+        :size_input: dimensions of input images
+        """
         super().__init__()
         
         self.input_layer = nn.Linear(size_input,400)
@@ -66,23 +72,17 @@ class Autoencoder_module(nn.Module):
 #        return len(self.labels)
 #    
     
-def train(ae, use_gpu=True):
+def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
 
-    Data = MnistVectors(digit=None)
-    Dl = DataLoader(Data, batch_size=16, shuffle=True)
-    optimizer = torch.optim.Adam(ae.parameters())
-    criterion = nn.MSELoss()
-    
     if use_gpu:
         ae.cuda()
         criterion.cuda()
         
     losses = []
-    for epoch in tqdm(range(3), desc='Epoch'):
-        for step, [example, label] in enumerate(tqdm(Dl, desc='Batch')):
+    for epoch in tqdm(range(epochs), desc='Epoch'):
+        for step, example in enumerate(tqdm(dataloader, desc='Batch')):
             if use_gpu:
                 example = example.cuda()
-                label = label.cuda()
                 
             optimizer.zero_grad()
             prediction = ae(example)
@@ -92,7 +92,28 @@ def train(ae, use_gpu=True):
             
             losses.append(float(loss))
             if (step % 300) == 0:
-                tqdm.write('Loss: {}'.format(loss))
+                tqdm.write('Loss: {}\n'.format(loss))
                 
-    torch.save(ae.state_dict(), 'autoencoder.ckpt')
+    ts = time.time()
+    timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
+    torch.save(ae.state_dict(), 'autoencoder{}.ckpt'.format(timestamp))
     return losses
+
+image_size = (100,100)
+data_path = "/home/boyko/Documents/courses/deepvision/cell_images/Uninfected"
+batch_size = 16
+
+ae = FCAutoencoder(image_size[0] * image_size[1])
+transforms = torchvision.transforms.Compose([ 
+    torchvision.transforms.Resize(image_size), 
+    torchvision.transforms.ToTensor(), 
+    dataloading.Flatten()     
+    ])
+data = dataloading.CellImages(data_path, transforms=transforms)
+print(len(data))
+dataloader = DataLoader(data, batch_size=16, shuffle=True)
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(ae.parameters())
+
+#TODO Add Tensorboard / logging
+train(ae, dataloader, criterion, optimizer, use_gpu=False)
