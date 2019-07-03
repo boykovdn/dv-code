@@ -3,7 +3,6 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data import DataLoader
 import os,sys
-import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from PIL import Image, ImageFilter
 import numpy as np
@@ -28,9 +27,9 @@ class CNNAutoencoder(nn.Module):
         self.conv3 = nn.Conv2d(12, 24, 3, padding=1)
 
         # Decoder learnable layers
-        self.upconv1 = nn.ConvTranspose2d(24, 12, 3, stride=2, padding=1)
-        self.upconv2 = nn.ConvTranspose2d(12, 6, 3, stride=2, padding=1)
-        self.upconv3 = nn.ConvTranspose2d(6, io_channels, 3, stride=2, padding=1)
+        self.upconv1 = nn.ConvTranspose2d(24, 12, 3, stride=2, padding=1,output_padding=1)
+        self.upconv2 = nn.ConvTranspose2d(12, 6, 3, stride=2, padding=1, output_padding=1)
+        self.upconv3 = nn.ConvTranspose2d(6, io_channels, 3, stride=2, padding=1, output_padding=1)
 
         # Activation and pooling layers
         self.relu = nn.ReLU()
@@ -46,51 +45,6 @@ class CNNAutoencoder(nn.Module):
         out = self.upconv3(out)
         
         return out
-
-def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
-
-    if use_gpu:
-        ae.cuda()
-        criterion.cuda()
-        
-    losses = []
-    for epoch in tqdm(range(epochs), desc='Epoch'):
-        for step, example in enumerate(tqdm(dataloader, desc='Batch')):
-            if use_gpu:
-                example = example.cuda()
-                
-            optimizer.zero_grad()
-            prediction = ae(example)
-            loss = criterion(example, prediction)
-            loss.backward()
-            optimizer.step()
-            
-            losses.append(float(loss))
-            if (step % 300) == 0:
-                tqdm.write('Loss: {}\n'.format(loss))
-                
-    ts = time.time()
-    timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-    torch.save(ae.state_dict(), 'cnn_autoencoder{}.ckpt'.format(timestamp))
-    return losses
-
-image_size = (128,128)
-data_path = "/home/boyko/Documents/courses/deepvision/cell_images/Uninfected"
-batch_size = 256
-
-if __name__ == "__main__":
-    ae = CNNAutoencoder()
-    transforms = torchvision.transforms.Compose([ 
-        torchvision.transforms.Resize(image_size), 
-        torchvision.transforms.ToTensor()
-        ])
-    data = dataloading.CellImages(data_path, transforms=transforms)
-    print("Image shape: {}".format(data[0].size()))
-    print("Number of images: {}".format(len(data)))
-    dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
-    criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(ae.parameters())
-    train(ae, dataloader, criterion, optimizer, use_gpu=False, epochs=5)
 
 def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
     t_begin = time.time()
@@ -117,23 +71,25 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
                 
     t_end = time.time()
     timestamp = datetime.datetime.fromtimestamp(t_end).strftime('%Y-%m-%d-%H-%M-%S')
-    torch.save(ae.state_dict(), 'autoencoder{}.ckpt'.format(timestamp))
+    torch.save(ae.state_dict(), 'cnn_autoencoder{}.ckpt'.format(timestamp))
     time_training = t_end - t_begin
     return losses, timestamp, time_training
 
 if __name__ == "__main__":
-    image_size = (100,100)
+    image_size = (128,128)
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
+    batch_size = 32
     
-    ae = FCAutoencoder(image_size[0] * image_size[1])
+    ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
         torchvision.transforms.Resize(image_size), 
         torchvision.transforms.ToTensor(), 
         ])
     data = dataloading.CellImages(data_path, transforms=transforms)
-    dataloader = DataLoader(data, batch_size=256, shuffle=True)
+    dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(ae.parameters())
+    print(ae)
     
     losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
     with open("./losses{}.pickle".format(timestamp), "wb") as outfile:

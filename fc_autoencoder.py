@@ -7,6 +7,7 @@ import numpy as np
 import dataloading
 import time
 import datetime
+import pickle
 
 class FCAutoencoder(nn.Module):
     """
@@ -73,6 +74,7 @@ class FCAutoencoder(nn.Module):
 #    
     
 def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
+    t_begin = time.time()
 
     if use_gpu:
         ae.cuda()
@@ -94,16 +96,16 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
             if (step % 300) == 0:
                 tqdm.write('Loss: {}\n'.format(loss))
                 
-    ts = time.time()
-    timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
+    t_end = time.time()
+    timestamp = datetime.datetime.fromtimestamp(t_end).strftime('%Y-%m-%d-%H-%M-%S')
     torch.save(ae.state_dict(), 'autoencoder{}.ckpt'.format(timestamp))
-    return losses
-
-image_size = (100,100)
-data_path = "/home/boyko/Documents/courses/deepvision/cell_images/Uninfected"
-batch_size = 16
+    time_training = t_end - t_begin
+    return losses, timestamp, time_training
 
 if __name__ == "__main__":
+    image_size = (100,100)
+    data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
+    
     ae = FCAutoencoder(image_size[0] * image_size[1])
     transforms = torchvision.transforms.Compose([ 
         torchvision.transforms.Resize(image_size), 
@@ -111,10 +113,16 @@ if __name__ == "__main__":
         dataloading.Flatten()     
         ])
     data = dataloading.CellImages(data_path, transforms=transforms)
-    print(len(data))
-    dataloader = DataLoader(data, batch_size=16, shuffle=True)
+    dataloader = DataLoader(data, batch_size=256, shuffle=True)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(ae.parameters())
     
-    #TODO Add Tensorboard / logging
-    train(ae, dataloader, criterion, optimizer, use_gpu=False)
+    losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
+    with open("./losses{}.pickle".format(timestamp), "wb") as outfile:
+        pickle.dump(losses, outfile)
+    with open("./autoencoder_info{}.log".format(timestamp), "w+") as log_file:
+        print("Model\n",ae, file=log_file)
+        print("Criterion\n", criterion, file=log_file)
+        print("Optimizer\n", optimizer, file=log_file)
+        print("Transforms\n", transforms, file=log_file)
+        print("Time Training\n", time_training)
