@@ -16,7 +16,7 @@ class CNNAutoencoder(nn.Module):
     Convolutional autoencoder
     """
     
-    def __init__(self):
+    def __init__(self, image_size=(128,128)):
         """
         :io_channels: number of channels of input and output, should be 3, unless grayscale
         """
