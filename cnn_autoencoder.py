@@ -11,18 +11,18 @@ import time
 import datetime
 import pickle
 
-image_size = (128,128)
-
 class CNNAutoencoder(nn.Module):
     """
     Convolutional autoencoder
     """
     
-    def __init__(self, io_channels=3):
+    def __init__(self, io_channels=3, image_size=(128,128)):
         """
         :io_channels: number of channels of input and output, should be 3, unless grayscale
         """
         super().__init__()
+
+        self.image_size = image_size
         # Encoder learnable layers
         self.conv1 = nn.Conv2d(io_channels, 32, 3, padding=1)
         self.conv2 = nn.Conv2d(32, 128, 3, padding=1)

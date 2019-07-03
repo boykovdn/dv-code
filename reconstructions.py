@@ -10,11 +10,9 @@ import os
 import sys
 
 images_path = "../cell_images/Parasitized"
-transforms = dataloading.transforms
 to_PIL = torchvision.transforms.ToPILImage()
-image_size = fc_autoencoder.image_size
 
-def illustrate_performance(model,model_path, loss=None):
+def illustrate_performance(model,model_path, image_size, transforms, loss=None):
     """
     Generates images of original/reconstruction pairs, and a loss graph
     :loss: if not None, graph the loss history and save in the same dir
@@ -29,9 +27,13 @@ def illustrate_performance(model,model_path, loss=None):
     for img_index in range(0,10):
         img_orig = cell_images[img_index].view(3,image_size[0],image_size[1])
         img_orig = to_PIL(img_orig)
-        img_reconst = model.forward(cell_images[img_index]).view(3, image_size[0], image_size[1])
-        img_reconst = to_PIL(img_reconst)
-        
+
+        if model_type == 'cnn':
+            img_reconst = model.forward(cell_images[img_index].view(1,3,image_size[0], image_size[1]))
+            img_reconst = to_PIL(img_reconst.squeeze(0))
+        elif model_type == 'fc':
+            img_reconst = model.forward(cell_images[img_index].view(3,image_size[0], image_size[1]))
+            img_reconst = to_PIL(img_reconst)                                                      
         img_new = Image.new('RGB', (image_size[0]*2, image_size[1]))
         img_new.paste(img_orig,(0,0))
         img_new.paste(img_reconst,(image_size[0],0))
@@ -46,11 +48,23 @@ def main():
     if model_type == 'fc':
         model = fc_autoencoder.FCAutoencoder(image_size[0] * image_size[1])
         model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        image_size = model.image_size
+        transforms = torchvision.transforms.Compose([
+            torchvision.transforms.Resize(image_size),
+            torchvision.transforms.ToTensor(),
+            dataloading.Flatten()
+            ])
+    
     elif model_type == 'cnn':
         model = cnn_autoencoder.CNNAutoencoder()
         model.load_state_dict(torch.load(model_path, map_location="cpu"))      
-
-    illustrate_performance(model, model_path)
+        image_size = model.image_size
+        transforms = torchvision.transforms.Compose([
+            torchvision.transforms.Resize(image_size),
+            torchvision.transforms.ToTensor(),
+            ])
+    
+    illustrate_performance(model, model_path, image_size, transforms)
     
 if __name__ == "__main__":
     main()
