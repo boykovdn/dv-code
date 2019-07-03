@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torchvision
-import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import numpy as np

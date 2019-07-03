@@ -24,14 +24,14 @@ class CNNAutoencoder(nn.Module):
         """
         super().__init__()
         # Encoder learnable layers
-        self.conv1 = nn.Conv2d(io_channels, 6, 3, padding=1)
-        self.conv2 = nn.Conv2d(6, 12, 3, padding=1)
-        self.conv3 = nn.Conv2d(12, 24, 3, padding=1)
+        self.conv1 = nn.Conv2d(io_channels, 32, 3, padding=1)
+        self.conv2 = nn.Conv2d(32, 128, 3, padding=1)
+        self.conv3 = nn.Conv2d(128, 256, 3, padding=1)
 
         # Decoder learnable layers
-        self.upconv1 = nn.ConvTranspose2d(24, 12, 3, stride=2, padding=1,output_padding=1)
-        self.upconv2 = nn.ConvTranspose2d(12, 6, 3, stride=2, padding=1, output_padding=1)
-        self.upconv3 = nn.ConvTranspose2d(6, io_channels, 3, stride=2, padding=1, output_padding=1)
+        self.upconv1 = nn.ConvTranspose2d(256, 128, 3, stride=2, padding=1,output_padding=1)
+        self.upconv2 = nn.ConvTranspose2d(128, 32, 3, stride=2, padding=1, output_padding=1)
+        self.upconv3 = nn.ConvTranspose2d(32, io_channels, 3, stride=2, padding=1, output_padding=1)
 
         # Activation and pooling layers
         self.relu = nn.ReLU()
@@ -79,7 +79,7 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
 
 if __name__ == "__main__":
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
-    batch_size = 32
+    batch_size = 64
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
     with open("./losses{}.pickle".format(timestamp), "wb") as outfile:
         pickle.dump(losses, outfile)
-    with open("./autoencoder_info{}.log".format(timestamp), "w+") as log_file:
+    with open("./cnn_autoencoder_info{}.log".format(timestamp), "w+") as log_file:
         print("Model\n",ae, file=log_file)
         print("Criterion\n", criterion, file=log_file)
         print("Optimizer\n", optimizer, file=log_file)
