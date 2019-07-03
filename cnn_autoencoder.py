@@ -11,6 +11,8 @@ import time
 import datetime
 import pickle
 
+image_size = (128,128)
+
 class CNNAutoencoder(nn.Module):
     """
     Convolutional autoencoder
@@ -76,7 +78,6 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
     return losses, timestamp, time_training
 
 if __name__ == "__main__":
-    image_size = (128,128)
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
     batch_size = 32
     
