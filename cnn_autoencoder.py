@@ -16,7 +16,7 @@ class CNNAutoencoder(nn.Module):
     Convolutional autoencoder
     """
     
-    def __init__(self, io_channels=3, image_size=(128,128)):
+    def __init__(self):
         """
         :io_channels: number of channels of input and output, should be 3, unless grayscale
         """
@@ -24,14 +24,24 @@ class CNNAutoencoder(nn.Module):
 
         self.image_size = image_size
         # Encoder learnable layers
-        self.conv1 = nn.Conv2d(io_channels, 32, 3, padding=1)
-        self.conv2 = nn.Conv2d(32, 128, 3, padding=1)
-        self.conv3 = nn.Conv2d(128, 256, 3, padding=1)
+
+        self.ae_shape = {
+                'conv1' : (3,16,3),
+                'conv2' : (16,64,3),
+                'conv3' : (64,128,3),
+                'upconv1' : (128,64,3),
+                'upconv2' : (64,16,3),
+                'upconv3' : (16,3,3)
+                }
+
+        self.conv1 = nn.Conv2d(*self.ae_shape['conv1'], padding=1)
+        self.conv2 = nn.Conv2d(*self.ae_shape['conv2'], padding=1)
+        self.conv3 = nn.Conv2d(*self.ae_shape['conv3'], padding=1)
 
         # Decoder learnable layers
-        self.upconv1 = nn.ConvTranspose2d(256, 128, 3, stride=2, padding=1,output_padding=1)
-        self.upconv2 = nn.ConvTranspose2d(128, 32, 3, stride=2, padding=1, output_padding=1)
-        self.upconv3 = nn.ConvTranspose2d(32, io_channels, 3, stride=2, padding=1, output_padding=1)
+        self.upconv1 = nn.ConvTranspose2d(*self.ae_shape['upconv1'], stride=2, padding=1,output_padding=1)
+        self.upconv2 = nn.ConvTranspose2d(*self.ae_shape['upconv2'], stride=2, padding=1, output_padding=1)
+        self.upconv3 = nn.ConvTranspose2d(*self.ae_shape['upconv3'], stride=2, padding=1, output_padding=1)
 
         # Activation and pooling layers
         self.relu = nn.ReLU()
