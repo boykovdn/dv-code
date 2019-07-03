@@ -21,8 +21,8 @@ class FCAutoencoder(nn.Module):
         
         self.input_layer = nn.Linear(size_input,400)
         self.h1 = nn.Linear(400,100)
-        self.h2 = nn.Linear(100,10)
-        self.encoded = nn.Linear(10,100)
+        self.h2 = nn.Linear(100,100)
+        self.encoded = nn.Linear(100,100)
         self.h3 = nn.Linear(100,400)
         self.output = nn.Linear(400,size_input)
         
@@ -103,17 +103,18 @@ image_size = (100,100)
 data_path = "/home/boyko/Documents/courses/deepvision/cell_images/Uninfected"
 batch_size = 16
 
-ae = FCAutoencoder(image_size[0] * image_size[1])
-transforms = torchvision.transforms.Compose([ 
-    torchvision.transforms.Resize(image_size), 
-    torchvision.transforms.ToTensor(), 
-    dataloading.Flatten()     
-    ])
-data = dataloading.CellImages(data_path, transforms=transforms)
-print(len(data))
-dataloader = DataLoader(data, batch_size=16, shuffle=True)
-criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(ae.parameters())
-
-#TODO Add Tensorboard / logging
-train(ae, dataloader, criterion, optimizer, use_gpu=False)
+if __name__ == "__main__":
+    ae = FCAutoencoder(image_size[0] * image_size[1])
+    transforms = torchvision.transforms.Compose([ 
+        torchvision.transforms.Resize(image_size), 
+        torchvision.transforms.ToTensor(), 
+        dataloading.Flatten()     
+        ])
+    data = dataloading.CellImages(data_path, transforms=transforms)
+    print(len(data))
+    dataloader = DataLoader(data, batch_size=16, shuffle=True)
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(ae.parameters())
+    
+    #TODO Add Tensorboard / logging
+    train(ae, dataloader, criterion, optimizer, use_gpu=False)
