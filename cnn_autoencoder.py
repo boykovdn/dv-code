@@ -101,7 +101,7 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
 if __name__ == "__main__":
     image_size = (128,128)
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
-    batch_size = 16
+    batch_size = 256
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
