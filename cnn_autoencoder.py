@@ -24,12 +24,12 @@ class CNNAutoencoder(nn.Module):
         # Encoder learnable layers
 
         self.ae_shape = {
-                'conv1' : (3,16,3),
-                'conv2' : (16,64,3),
-                'conv3' : (64,128,3),
-                'upconv1' : (128,64,3),
-                'upconv2' : (64,16,3),
-                'upconv3' : (16,3,3)
+                'conv1' : (3,128,3),
+                'conv2' : (128,512,3),
+                'conv3' : (512,2048,3),
+                'upconv1' : (2048,512,3),
+                'upconv2' : (512,128,3),
+                'upconv3' : (128,3,3)
                 }
 
         self.conv1 = nn.Conv2d(*self.ae_shape['conv1'], padding=1)
@@ -89,7 +89,7 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
 if __name__ == "__main__":
     image_size = (128,128)
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
-    batch_size = 64
+    batch_size = 16
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
