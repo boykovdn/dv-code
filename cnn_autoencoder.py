@@ -24,16 +24,16 @@ class CNNAutoencoder(nn.Module):
         # Encoder learnable layers
 
         self.ae_shape = {
-                'conv1' : (3,6,3),
-                'conv2' : (6,12,3),
-                'conv3' : (12,24,3),
-                'conv4' : (24,48,3),
-                'conv5' : (48,96,3),
-                'upconv1' : (96,48,3),
-                'upconv2' : (48,24,3),
-                'upconv3' : (24,12,3),
-                'upconv4' : (12,6,3),
-                'upconv5' : (6,3,3)
+                'conv1' : (3,12,3),
+                'conv2' : (12,24,3),
+                'conv3' : (24,48,3),
+                'conv4' : (48,96,3),
+                'conv5' : (96,192,3),
+                'upconv1' : (192,96,3),
+                'upconv2' : (96,48,3),
+                'upconv3' : (48,24,3),
+                'upconv4' : (24,12,3),
+                'upconv5' : (12,3,3)
                 }
 
         self.conv1 = nn.Conv2d(*self.ae_shape['conv1'], padding=1)
