@@ -14,11 +14,13 @@ class FCAutoencoder(nn.Module):
     Fully connected autoencoder
     """
     
-    def __init__(self, size_input):
+    def __init__(self, size_input, image_size=(100,100)):
         """
         :size_input: dimensions of input images
         """
         super().__init__()
+    
+        self.image_size = image_size
         
         self.input_layer = nn.Linear(size_input,400)
         self.h1 = nn.Linear(400,100)

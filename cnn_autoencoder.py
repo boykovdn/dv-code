@@ -16,11 +16,13 @@ class CNNAutoencoder(nn.Module):
     Convolutional autoencoder
     """
     
-    def __init__(self):
+    def __init__(self, image_size=(128,128)):
         """
         :io_channels: number of channels of input and output, should be 3, unless grayscale
         """
         super().__init__()
+
+        self.image_size = image_size
         # Encoder learnable layers
 
         self.ae_shape = {
@@ -68,7 +70,6 @@ class CNNAutoencoder(nn.Module):
         
         return out
 
-
 def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
     t_begin = time.time()
 
@@ -99,7 +100,6 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
     return losses, timestamp, time_training
 
 if __name__ == "__main__":
-    image_size = (128,128)
     data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
     batch_size = 256
     
