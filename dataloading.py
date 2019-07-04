@@ -52,16 +52,17 @@ class Flatten(object):
         return image_tensor.view((image_shape[0], -1))
 
 
+transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((100,100)),
+    torchvision.transforms.ToTensor(),
+    Flatten()    
+])
+ 
+
 def main():
     """
     Test example
     """
-
-    transforms = torchvision.transforms.Compose([
-        torchvision.transforms.Resize((100,100)),
-        torchvision.transforms.ToTensor(),
-        Flatten()    
-    ])
     civs = CellImages("../project/cell_images/Uninfected", transforms=transforms)
     dataloader = torch.utils.data.DataLoader(civs, batch_size=16)
     
