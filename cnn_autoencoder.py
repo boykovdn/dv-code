@@ -31,11 +31,13 @@ class CNNAutoencoder(nn.Module):
                 'conv3' : (24,48,3),
                 'conv4' : (48,96,3),
                 'conv5' : (96,192,3),
-                'upconv1' : (192,96,3),
-                'upconv2' : (96,48,3),
-                'upconv3' : (48,24,3),
-                'upconv4' : (24,12,3),
-                'upconv5' : (12,3,3)
+                'conv6' : (192,384,3),
+                'upconv1' : (384,192,3),
+                'upconv2' : (192,96,3),
+                'upconv3' : (96,48,3),
+                'upconv4' : (48,24,3),
+                'upconv5' : (24,12,3),
+                'upconv6' : (12,3,3)
                 }
 
         self.conv1 = nn.Conv2d(*self.ae_shape['conv1'], padding=1)
@@ -48,17 +50,21 @@ class CNNAutoencoder(nn.Module):
         self.batchnorm4 = nn.BatchNorm2d(self.ae_shape['conv4'][1])
         self.conv5 = nn.Conv2d(*self.ae_shape['conv5'], padding=1)
         self.batchnorm5 = nn.BatchNorm2d(self.ae_shape['conv5'][1])
+        self.conv6 = nn.Conv2d(*self.ae_shape['conv6'], padding=1)
+        self.batchnorm6 = nn.BatchNorm2d(self.ae_shape['conv6'][1])
 
         # Decoder learnable layers
         self.upconv1 = nn.ConvTranspose2d(*self.ae_shape['upconv1'], stride=2, padding=1,output_padding=1)
-        self.batchnorm6 = nn.BatchNorm2d(self.ae_shape['upconv1'][1])
+        self.batchnorm7 = nn.BatchNorm2d(self.ae_shape['upconv1'][1])
         self.upconv2 = nn.ConvTranspose2d(*self.ae_shape['upconv2'], stride=2, padding=1, output_padding=1)
-        self.batchnorm7 = nn.BatchNorm2d(self.ae_shape['upconv2'][1])
+        self.batchnorm8 = nn.BatchNorm2d(self.ae_shape['upconv2'][1])
         self.upconv3 = nn.ConvTranspose2d(*self.ae_shape['upconv3'], stride=2, padding=1, output_padding=1)
-        self.batchnorm8 = nn.BatchNorm2d(self.ae_shape['upconv3'][1])
+        self.batchnorm9 = nn.BatchNorm2d(self.ae_shape['upconv3'][1])
         self.upconv4 = nn.ConvTranspose2d(*self.ae_shape['upconv4'], stride=2, padding=1, output_padding=1)
-        self.batchnorm9 = nn.BatchNorm2d(self.ae_shape['upconv4'][1])
+        self.batchnorm10 = nn.BatchNorm2d(self.ae_shape['upconv4'][1])
         self.upconv5 = nn.ConvTranspose2d(*self.ae_shape['upconv5'], stride=2, padding=1, output_padding=1)
+        self.batchnorm11 = nn.BatchNorm2d(self.ae_shape['upconv5'][1])
+        self.upconv6 = nn.ConvTranspose2d(*self.ae_shape['upconv6'], stride=2, padding=1, output_padding=1)
 
         # Activation and pooling layers
         self.relu = nn.ReLU()
@@ -70,12 +76,14 @@ class CNNAutoencoder(nn.Module):
         out = self.pool2d(self.batchnorm3(self.relu(self.conv3(out))))
         out = self.pool2d(self.batchnorm4(self.relu(self.conv4(out))))
         out = self.pool2d(self.batchnorm5(self.relu(self.conv5(out))))
+        out = self.pool2d(self.batchnorm6(self.relu(self.conv6(out))))
 
-        out = self.batchnorm6(self.relu(self.upconv1(out)))
-        out = self.batchnorm7(self.relu(self.upconv2(out)))
-        out = self.batchnorm8(self.relu(self.upconv3(out)))
-        out = self.batchnorm9(self.relu(self.upconv4(out)))
-        out = self.upconv5(out)
+        out = self.batchnorm7(self.relu(self.upconv1(out)))
+        out = self.batchnorm8(self.relu(self.upconv2(out)))
+        out = self.batchnorm9(self.relu(self.upconv3(out)))
+        out = self.batchnorm10(self.relu(self.upconv4(out)))
+        out = self.batchnorm11(self.relu(self.upconv5(out)))
+        out = self.upconv6(out)
         
         return out
 
@@ -114,7 +122,7 @@ if __name__ == "__main__":
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
-        torchvision.transforms.Resize(image_size), 
+        torchvision.transforms.Resize(ae.image_size), 
         torchvision.transforms.ToTensor(), 
         ])
     data = dataloading.CellImages(data_path, transforms=transforms)
