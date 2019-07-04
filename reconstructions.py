@@ -48,6 +48,7 @@ def main():
     if model_type == 'fc':
         model = fc_autoencoder.FCAutoencoder(image_size[0] * image_size[1])
         model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        model.eval()
         image_size = model.image_size
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
@@ -58,6 +59,7 @@ def main():
     elif model_type == 'cnn':
         model = cnn_autoencoder.CNNAutoencoder()
         model.load_state_dict(torch.load(model_path, map_location="cpu"))      
+        model.eval()
         image_size = model.image_size
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
