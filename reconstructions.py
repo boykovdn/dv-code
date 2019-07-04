@@ -12,7 +12,7 @@ import sys
 images_path = "../cell_images/Parasitized"
 to_PIL = torchvision.transforms.ToPILImage()
 
-def illustrate_performance(model,model_path, image_size, transforms, loss=None):
+def illustrate_performance(model,model_path, image_size, transforms, model_type='fc', loss=None):
     """
     Generates images of original/reconstruction pairs, and a loss graph
     :loss: if not None, graph the loss history and save in the same dir
@@ -64,7 +64,7 @@ def main():
             torchvision.transforms.ToTensor(),
             ])
     
-    illustrate_performance(model, model_path, image_size, transforms)
+    illustrate_performance(model, model_path, image_size, transforms, model_type=model_type)
     
 if __name__ == "__main__":
     main()
