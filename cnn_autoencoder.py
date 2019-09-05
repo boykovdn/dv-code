@@ -23,7 +23,10 @@ class CNNAutoencoder(nn.Module):
         """
         super().__init__()
 
+        # Store encoding for the latest batch
+        self.latent_representation = None
         self.image_size = image_size
+
         # Encoder learnable layers
 
         self.ae_shape = {
@@ -78,6 +81,8 @@ class CNNAutoencoder(nn.Module):
         out = self.pool2d(self.batchnorm4(self.relu(self.conv4(out))))
         out = self.pool2d(self.batchnorm5(self.relu(self.conv5(out))))
         out = self.batchnorm6(self.relu(self.conv6(out)))
+
+        self.latent_representation = out
 
         out = self.batchnorm7(self.relu(self.upconv1(out)))
         out = self.batchnorm8(self.relu(self.upconv2(out)))
