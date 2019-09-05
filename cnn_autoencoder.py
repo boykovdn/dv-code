@@ -113,7 +113,6 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
                 
     t_end = time.time()
     timestamp = datetime.datetime.fromtimestamp(t_end).strftime('%Y-%m-%d-%H-%M-%S')
-    torch.save(ae.state_dict(), 'cnn_autoencoder{}.ckpt'.format(timestamp))
     time_training = t_end - t_begin
     return losses, timestamp, time_training
 
@@ -149,9 +148,11 @@ if __name__ == "__main__":
     
     losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
 
-    model_folder_path = './{}/cnn_autoencoder_{}'.format(meta_folder_path, timestamp)
+    model_folder_path = '{}/cnn_autoencoder_{}'.format(meta_folder_path, timestamp)
     if not os.path.exists(model_folder_path):
-        os.path.makedirs(model_folder_path)
+        os.makedirs(model_folder_path)
+
+    torch.save(ae.state_dict(), '{}/cnn_autoencoder{}.ckpt'.format(model_folder_path, timestamp))
 
     with open("{}/losses{}.pickle".format(model_folder_path, timestamp), "wb") as outfile:
         pickle.dump(losses, outfile)
