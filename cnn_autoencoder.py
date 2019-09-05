@@ -6,10 +6,11 @@ import os,sys
 from tqdm.auto import tqdm
 from PIL import Image, ImageFilter
 import numpy as np
-import dataloading
+from dv_code import dataloading
 import time
 import datetime
 import pickle
+import argparse
 
 class CNNAutoencoder(nn.Module):
     """
@@ -112,13 +113,27 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
                 
     t_end = time.time()
     timestamp = datetime.datetime.fromtimestamp(t_end).strftime('%Y-%m-%d-%H-%M-%S')
-    torch.save(ae.state_dict(), 'cnn_autoencoder{}.ckpt'.format(timestamp))
     time_training = t_end - t_begin
     return losses, timestamp, time_training
 
 if __name__ == "__main__":
-    data_path = "/export/home/dv/dv016/datasets/cell_images/Uninfected"
+    #Defaults
     batch_size = 128
+    meta_folder_path = './'
+
+    parser = argparse.ArgumentParser(description='Train CNN autoencoder')
+    parser.add_argument('--input', required=True, type=str, help='Folder containing training images.')
+    parser.add_argument('--output', required=False, type=str, help='Results folder will be created in the specified folder.')
+    parser.add_argument('--batch_size', required=False, type=int, help='Default 128. The more, the better but limited by your GPU memory.')
+    parser.add_argument('--device', required=False, type=int, help='Index that pytorch uses to select your GPU.')
+
+    args = parser.parse_args()
+
+    data_path = args.input if args.input is not None else 0
+    meta_folder_path = args.output if args.output is not None else meta_folder_path
+    batch_size = args.batch_size if args.batch_size is not None else batch_size
+    torch.cuda.device(args.device) if args.device is not None else 0
+
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
@@ -132,9 +147,16 @@ if __name__ == "__main__":
     print(ae)
     
     losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
-    with open("./losses{}.pickle".format(timestamp), "wb") as outfile:
+
+    model_folder_path = '{}/cnn_autoencoder_{}'.format(meta_folder_path, timestamp)
+    if not os.path.exists(model_folder_path):
+        os.makedirs(model_folder_path)
+
+    torch.save(ae.state_dict(), '{}/cnn_autoencoder{}.ckpt'.format(model_folder_path, timestamp))
+
+    with open("{}/losses{}.pickle".format(model_folder_path, timestamp), "wb") as outfile:
         pickle.dump(losses, outfile)
-    with open("./cnn_autoencoder_info{}.log".format(timestamp), "w+") as log_file:
+    with open("{}/cnn_autoencoder_info{}.log".format(model_folder_path, timestamp), "w+") as log_file:
         print("Model\n",ae, file=log_file)
         print("Criterion\n", criterion, file=log_file)
         print("Optimizer\n", optimizer, file=log_file)
