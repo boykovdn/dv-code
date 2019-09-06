@@ -125,6 +125,7 @@ if __name__ == "__main__":
     #Defaults
     batch_size = 128
     meta_folder_path = './'
+    epochs = 5
 
     parser = argparse.ArgumentParser(description='Train CNN autoencoder')
     parser.add_argument('--input', required=True, type=str, help='Folder containing training images.')
@@ -166,4 +167,6 @@ if __name__ == "__main__":
         print("Criterion\n", criterion, file=log_file)
         print("Optimizer\n", optimizer, file=log_file)
         print("Transforms\n", transforms, file=log_file)
-        print("Time Training\n", time_training)
+        print("Time Training\n", time_training, file=log_file)
+        print("Trained on\n", data_path, file=log_file)
+        print("Epochs\n", args.epochs, file=log_file)
