@@ -131,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument('--output', required=False, type=str, help='Results folder will be created in the specified folder.')
     parser.add_argument('--batch_size', required=False, type=int, help='Default 128. The more, the better but limited by your GPU memory.')
     parser.add_argument('--device', required=False, type=int, help='Index that pytorch uses to select your GPU.')
+    parser.add_argument('--epochs', required=False, type=int, help='Number of training epochs.')
 
     args = parser.parse_args()
 
@@ -138,7 +139,6 @@ if __name__ == "__main__":
     meta_folder_path = args.output if args.output is not None else meta_folder_path
     batch_size = args.batch_size if args.batch_size is not None else batch_size
     torch.cuda.device(args.device) if args.device is not None else 0
-
     
     ae = CNNAutoencoder()
     transforms = torchvision.transforms.Compose([ 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(ae.parameters())
     print(ae)
     
-    losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True)
+    losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=args.epochs)
 
     model_folder_path = '{}/cnn_autoencoder_{}'.format(meta_folder_path, timestamp)
     if not os.path.exists(model_folder_path):

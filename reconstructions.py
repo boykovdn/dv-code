@@ -1,27 +1,33 @@
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-import fc_autoencoder
-import cnn_autoencoder
-import dataloading
+from dv_code import fc_autoencoder
+from dv_code import cnn_autoencoder
+from dv_code import dataloading
 import torchvision
 from PIL import Image
 import os
 import sys
 
-images_path = "../cell_images/Parasitized"
 to_PIL = torchvision.transforms.ToPILImage()
 
-def illustrate_performance(model,model_path, image_size, transforms, model_type='fc', loss=None):
+def illustrate_performance(model,
+                           output_path,
+                           transforms,
+                           images_path="../cell_images/Parasitized",
+                           model_type='fc',
+                           loss=None):
     """
     Generates images of original/reconstruction pairs, and a loss graph
     :loss: if not None, graph the loss history and save in the same dir
     """
+    image_size = model.image_size
+    images_tag = images_path.split('/')[-1]
 
-    performance_dir = model_path[:-5]
+    performance_dir = output_path + "/{}".format(images_tag)
     if not os.path.exists(performance_dir):
         os.mkdir(performance_dir)
-    
+
     cell_images = dataloading.CellImages(images_path, transforms=transforms)
 
     for img_index in range(0,10):
@@ -49,7 +55,6 @@ def main():
         model = fc_autoencoder.FCAutoencoder(image_size[0] * image_size[1])
         model.load_state_dict(torch.load(model_path, map_location="cpu"))
         model.eval()
-        image_size = model.image_size
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
             torchvision.transforms.ToTensor(),
@@ -60,13 +65,12 @@ def main():
         model = cnn_autoencoder.CNNAutoencoder()
         model.load_state_dict(torch.load(model_path, map_location="cpu"))      
         model.eval()
-        image_size = model.image_size
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
             torchvision.transforms.ToTensor(),
             ])
     
-    illustrate_performance(model, model_path, image_size, transforms, model_type=model_type)
+    illustrate_performance(model, model_path, transforms, model_type=model_type)
     
 if __name__ == "__main__":
     main()

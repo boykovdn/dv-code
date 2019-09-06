@@ -9,23 +9,34 @@ import os
 
 class CellImages(torch.utils.data.Dataset):
 
-    def __init__(self, path, transforms=None):
+    def __init__(self, path, transforms=None, recursive_load=True, ext=".png"):
 
         """
+        :path: PATH to the input images
         :transforms: torchvision.transforms.Compose object
-        :path: where the Uninfected and Parasitised folders are located
+        :recursive_load: If True, will walk through directory tree and load all images
+                         that end with given :ext:
+        :ext: All images with this extension will be loaded as inputs. 
         """
         self.transforms = transforms
-        self.image_names_raw = self._load_data_names(path)
-        assert "Uninfected" in path or "Parasitized" in path, "Expected path of format ../Uninfected or ../Parasitized, but got {}".format(path)
+        self.image_names_raw = self._load_data_names(path, recursive_load, ext)
         assert len(self.image_names_raw) != 0, "Found no .png in {}".format(path)
 
-    def _load_data_names(self, path):
+    def _load_data_names(self, path, recursive_load, ext):
         """
-        Load .png image names - to be loaded lazily later
-        :path: path to folder that contains some .png images
+        Load .png image paths as strings - to be loaded on demand.
+
+        Args:
+            Same as passed in __init__
         """
-        image_names_raw = ["{}/{}".format(path, image_name) for image_name in os.listdir(path) if ".png" in image_name]
+
+        if recursive_load:
+            image_names_raw = []
+            for root, dirs, files in os.walk(path):
+                image_names_raw.extend(["{}/{}".format(root, image_name) for image_name in files if ext in image_name])
+
+        else:
+            image_names_raw = ["{}/{}".format(path, image_name) for image_name in os.listdir(path) if ext in image_name]
     
         return image_names_raw
 
