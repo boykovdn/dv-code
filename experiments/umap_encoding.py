@@ -83,10 +83,10 @@ def main():
     ae.eval()
     ae.cuda() if args.device is not None else 0
 
-#    lr_h, lr_i = get_latent_representations(args, ae, transforms)
-#
-#    with open('latent_representations_both.pickle', 'wb') as out_pickle:
-#        pickle.dump((lr_h, lr_i), out_pickle)
+    lr_h, lr_i = get_latent_representations(args, ae, transforms)
+
+    with open('latent_representations_both.pickle', 'wb') as out_pickle:
+        pickle.dump((lr_h, lr_i), out_pickle)
 
     with open('latent_representations_both.pickle', 'rb') as in_pickle:
         lr_h, lr_i = pickle.load(in_pickle)
@@ -97,6 +97,7 @@ def main():
     output_dir = '/'.join(args.model.split('/')[:-1])
     plt.savefig(output_dir)
 
+    ae.cpu()
     images_path = args.input + "/Parasitized"
     illustrate_performance(ae, output_dir, transforms, images_path=images_path, model_type='cnn')
     images_path = args.input + "/Uninfected"

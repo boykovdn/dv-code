@@ -23,6 +23,8 @@ def illustrate_performance(model,
     """
     image_size = model.image_size
     images_tag = images_path.split('/')[-1]
+    # Make sure model is set to evaluation mode
+    model.eval()
 
     performance_dir = output_path + "/{}".format(images_tag)
     if not os.path.exists(performance_dir):
@@ -54,7 +56,6 @@ def main():
     if model_type == 'fc':
         model = fc_autoencoder.FCAutoencoder(image_size[0] * image_size[1])
         model.load_state_dict(torch.load(model_path, map_location="cpu"))
-        model.eval()
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
             torchvision.transforms.ToTensor(),
@@ -64,7 +65,6 @@ def main():
     elif model_type == 'cnn':
         model = cnn_autoencoder.CNNAutoencoder()
         model.load_state_dict(torch.load(model_path, map_location="cpu"))      
-        model.eval()
         transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize(image_size),
             torchvision.transforms.ToTensor(),
