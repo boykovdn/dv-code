@@ -58,7 +58,7 @@ class CNNAutoencoder(nn.Module):
         self.batchnorm6 = nn.BatchNorm2d(self.ae_shape['conv6'][1])
 
         # Decoder learnable layers
-        self.upconv1 = nn.ConvTranspose2d(*self.ae_shape['upconv1'], stride=1, padding=1,output_padding=0)
+        self.upconv1 = nn.ConvTranspose2d(*self.ae_shape['upconv1'], stride=2, padding=1,output_padding=1)
         self.batchnorm7 = nn.BatchNorm2d(self.ae_shape['upconv1'][1])
         self.upconv2 = nn.ConvTranspose2d(*self.ae_shape['upconv2'], stride=2, padding=1, output_padding=1)
         self.batchnorm8 = nn.BatchNorm2d(self.ae_shape['upconv2'][1])
@@ -80,7 +80,7 @@ class CNNAutoencoder(nn.Module):
         out = self.pool2d(self.batchnorm3(self.relu(self.conv3(out))))
         out = self.pool2d(self.batchnorm4(self.relu(self.conv4(out))))
         out = self.pool2d(self.batchnorm5(self.relu(self.conv5(out))))
-        out = self.batchnorm6(self.relu(self.conv6(out)))
+        out = self.pool2d(self.batchnorm6(self.relu(self.conv6(out))))
 
         self.latent_representation = out
 
@@ -112,9 +112,11 @@ def train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=5):
             loss.backward()
             optimizer.step()
             
-            losses.append(float(loss))
             if (step % 300) == 0:
                 tqdm.write('Loss: {}\n'.format(loss))
+
+        # Save loss after every batch
+        losses.append(float(loss))
                 
     t_end = time.time()
     timestamp = datetime.datetime.fromtimestamp(t_end).strftime('%Y-%m-%d-%H-%M-%S')
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     #Defaults
     batch_size = 128
     meta_folder_path = './'
-    epochs = 5
+    epochs = 30
 
     parser = argparse.ArgumentParser(description='Train CNN autoencoder')
     parser.add_argument('--input', required=True, type=str, help='Folder containing training images.')
@@ -136,6 +138,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    epochs = args.epochs if args.epochs is not None else epochs
     data_path = args.input if args.input is not None else 0
     meta_folder_path = args.output if args.output is not None else meta_folder_path
     batch_size = args.batch_size if args.batch_size is not None else batch_size
@@ -151,8 +154,10 @@ if __name__ == "__main__":
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(ae.parameters())
     print(ae)
+    # Explicitly set model in training mode
+    ae.train()
     
-    losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=args.epochs)
+    losses, timestamp, time_training = train(ae, dataloader, criterion, optimizer, use_gpu=True, epochs=epochs)
 
     model_folder_path = '{}/cnn_autoencoder_{}'.format(meta_folder_path, timestamp)
     if not os.path.exists(model_folder_path):
@@ -170,3 +175,4 @@ if __name__ == "__main__":
         print("Time Training\n", time_training, file=log_file)
         print("Trained on\n", data_path, file=log_file)
         print("Epochs\n", args.epochs, file=log_file)
+        print("Batch Size\n", args.batch_size, file=log_file)
