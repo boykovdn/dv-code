@@ -18,6 +18,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import umap
+import glob
 
 def get_latent_representations(args, ae, transforms):
     OUTPUT_DIR = './'
@@ -66,7 +67,7 @@ def plot_umap_embedding(lr, label="Data Name"):
 def main():
 
     parser = argparse.ArgumentParser(description='Generate Umap embedding of cnn_autoencoder latent code.')
-    parser.add_argument('--model', type=str, help='Specify path to model weights of choice.', required=True)
+    parser.add_argument('--model', type=str, nargs="*", help='Specify path to model weights of choice.', required=True)
     parser.add_argument('--output', type=str, help='Specify output directory where images will be saved.', required=False)
     parser.add_argument('--input', type=str, help='Path to input data.', required=True)
     parser.add_argument('--device', type=int, help='Select CUDA device to run network on.', required=False)
@@ -78,30 +79,42 @@ def main():
     
     args = parser.parse_args()
 
-    ae = CNNAutoencoder()
-    ae.load_state_dict(torch.load(args.model))
-    ae.eval()
-    ae.cuda() if args.device is not None else 0
+    for model in args.model:
 
-    lr_h, lr_i = get_latent_representations(args, ae, transforms)
-
-    with open('latent_representations_both.pickle', 'wb') as out_pickle:
-        pickle.dump((lr_h, lr_i), out_pickle)
-
-    with open('latent_representations_both.pickle', 'rb') as in_pickle:
-        lr_h, lr_i = pickle.load(in_pickle)
-
-    fig = plt.figure(figsize=(8,8))
-    plot_umap_embedding(lr_h, label='healthy')
-    plot_umap_embedding(lr_i, label='infected')
-    output_dir = '/'.join(args.model.split('/')[:-1])
-    plt.savefig(output_dir)
-
-    ae.cpu()
-    images_path = args.input + "/Parasitized"
-    illustrate_performance(ae, output_dir, transforms, images_path=images_path, model_type='cnn')
-    images_path = args.input + "/Uninfected"
-    illustrate_performance(ae, output_dir, transforms, images_path=images_path, model_type='cnn')
+        ae = CNNAutoencoder()
+        model_name = model.split('/')[-1].replace('_2019', '2019')
+        ae.load_state_dict(torch.load(model + "/{}.ckpt".format(model_name)))
+        ae.eval()
+        ae.cuda() if args.device is not None else 0
+    
+        lr_h, lr_i = get_latent_representations(args, ae, transforms)
+    
+        with open('latent_representations_both.pickle', 'wb') as out_pickle:
+            pickle.dump((lr_h, lr_i), out_pickle)
+    
+        with open('latent_representations_both.pickle', 'rb') as in_pickle:
+            lr_h, lr_i = pickle.load(in_pickle)
+    
+        fig = plt.figure(figsize=(8,8))
+        plot_umap_embedding(lr_h, label='healthy')
+        plot_umap_embedding(lr_i, label='infected')
+        output_dir = model
+        plt.savefig(output_dir + "/{}".format(model.split('/')[-1] + "_umap.png"))
+    
+        ae.cpu()
+        images_path = args.input + "/Parasitized"
+        illustrate_performance(ae, output_dir, transforms, images_path=images_path, model_type='cnn')
+        images_path = args.input + "/Uninfected"
+        illustrate_performance(ae, output_dir, transforms, images_path=images_path, model_type='cnn')
+    
+        with open(glob.glob("{}/*.pickle".format(output_dir))[0], 'rb') as picklefile:
+            losses = pickle.load(picklefile)
+            fig_loss = plt.figure(figsize=(8,8))
+            plt.plot(range(0,len(losses)),losses)
+            plt.title("Loss after every batch")
+            plt.text(0.5,0.5,"final: {0:.05f}".format(losses[-1]), fontsize=12)
+            plt.savefig(output_dir + "/{}".format(model.split('/')[-1] + "_losses.png"))
+        
 
 if __name__ == '__main__':
     main()
